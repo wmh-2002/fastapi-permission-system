@@ -1,41 +1,39 @@
 """
-Service layer for authentication-related operations
+认证相关操作的服务层
 """
 
 from sqlalchemy.orm import Session
-from app.database.models import User
-from app.schemas.user import UserCreate, UserLogin
-from app.utils.security import verify_password, get_password_hash, create_access_token
+from backend.database.user_models import User
+from backend.schemas.user import UserCreate, UserLogin
+from backend.utils.security import verify_password, get_password_hash, create_access_token
 from datetime import timedelta
 from typing import Optional
-from app.config import settings
-
+from backend.config import settings
 def authenticate_user(db: Session, username: str, password: str) -> Optional[User]:
     """
-    Authenticate a user by username and password
+    通过用户名和密码验证用户
     """
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.password):
         return None
     return user
 
-
 def register_user(db: Session, user_data: UserCreate) -> User:
     """
-    Register a new user
+    注册新用户
     """
-    # Check if username already exists
+    # 检查用户名是否已存在
     existing_user = db.query(User).filter(User.username == user_data.username).first()
     if existing_user:
-        raise ValueError("Username already exists")
+        raise ValueError("用户名已存在")
     
-    # Check if email already exists
+    # 检查邮箱是否已存在
     if user_data.email:
         existing_email = db.query(User).filter(User.email == user_data.email).first()
         if existing_email:
-            raise ValueError("Email already exists")
+            raise ValueError("邮箱已存在")
     
-    # Create new user
+    # 创建新用户
     hashed_password = get_password_hash(user_data.password)
     db_user = User(
         username=user_data.username,
@@ -48,12 +46,11 @@ def register_user(db: Session, user_data: UserCreate) -> User:
     db.refresh(db_user)
     return db_user
 
-
 def create_access_token_for_user(user: User) -> str:
     """
-    Create an access token for a user
+    为用户创建访问令牌
     """
-    # Get user permissions from roles
+    # 从角色获取用户权限
     permissions = []
     for role in user.roles:
         for perm in role.permissions:

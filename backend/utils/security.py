@@ -2,29 +2,29 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 import jwt
 from passlib.context import CryptContext
-from app.config import settings
+from backend.config import settings
 
-# Password hashing context
+# 密码哈希上下文
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verify a plain password against a hashed password
+    验证明文密码与哈希密码是否匹配
     """
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
     """
-    Generate a hash for the given password
+    为给定密码生成哈希值
     """
     return pwd_context.hash(password)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
-    Create a JWT access token
+    创建 JWT 访问令牌
     """
     to_encode = data.copy()
     if expires_delta:
@@ -39,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 def verify_token(token: str) -> Optional[dict]:
     """
-    Verify a JWT token and return the payload if valid
+    验证 JWT 令牌，如果有效则返回载荷
     """
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

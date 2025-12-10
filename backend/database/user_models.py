@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Table, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database.connection import Base
+from backend.database.connection import Base
 
-# Association table for user-role relationship
+# 用户-角色关系的关联表
 user_roles = Table(
     "user_roles",
     Base.metadata,
@@ -11,7 +11,7 @@ user_roles = Table(
     Column("role_id", Integer, ForeignKey("roles.id"), primary_key=True)
 )
 
-# Association table for role-permission relationship
+# 角色-权限关系的关联表
 role_permissions = Table(
     "role_permissions",
     Base.metadata,
@@ -26,12 +26,12 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(255), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True)
-    password = Column(String(255), nullable=False)  # Hashed password
+    password = Column(String(255), nullable=False)  # 哈希密码
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
-    status = Column(Boolean, default=True)  # Active/inactive status
+    status = Column(Boolean, default=True)  # 激活/非激活状态
 
-    # Relationships
+    # 关系
     roles = relationship("Role", secondary=user_roles, back_populates="users")
     permission_logs = relationship("PermissionLog", back_populates="user")
 
@@ -45,7 +45,7 @@ class Role(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
-    # Relationships
+    # 关系
     users = relationship("User", secondary=user_roles, back_populates="roles")
     permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
 
@@ -59,7 +59,7 @@ class Permission(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
-    # Relationships
+    # 关系
     roles = relationship("Role", secondary=role_permissions, back_populates="permissions")
 
 
@@ -69,9 +69,9 @@ class PermissionLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     permission_id = Column(Integer, ForeignKey("permissions.id"))
-    action = Column(String(50))  # "access", "denied", etc.
+    action = Column(String(50))  # "access", "denied" 等
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
+    # 关系
     user = relationship("User", back_populates="permission_logs")
     permission = relationship("Permission")

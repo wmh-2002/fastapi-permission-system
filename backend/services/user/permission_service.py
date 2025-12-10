@@ -1,42 +1,42 @@
 """
-Service layer for permission-related operations
+权限相关操作的服务层
 """
 
 from sqlalchemy.orm import Session
-from app.database.models import Permission
-from app.schemas.user import PermissionCreate, PermissionUpdate
+from backend.database.user_models import Permission
+from backend.schemas.user import PermissionCreate, PermissionUpdate
 from typing import List, Optional
 
 
 def get_permission_by_id(db: Session, permission_id: int) -> Optional[Permission]:
     """
-    Retrieve a permission by ID
+    根据ID获取权限
     """
     return db.query(Permission).filter(Permission.id == permission_id).first()
 
 
 def get_permission_by_name(db: Session, name: str) -> Optional[Permission]:
     """
-    Retrieve a permission by name
+    根据名称获取权限
     """
     return db.query(Permission).filter(Permission.name == name).first()
 
 
 def get_permissions(db: Session, skip: int = 0, limit: int = 100) -> List[Permission]:
     """
-    Retrieve a list of permissions with pagination
+    分页获取权限列表
     """
     return db.query(Permission).offset(skip).limit(limit).all()
 
 
 def create_permission(db: Session, permission_data: PermissionCreate) -> Permission:
     """
-    Create a new permission
+    创建新权限
     """
-    # Check if permission name already exists
+    # 检查权限名称是否已存在
     existing_permission = db.query(Permission).filter(Permission.name == permission_data.name).first()
     if existing_permission:
-        raise ValueError("Permission name already exists")
+        raise ValueError("权限名称已存在")
     
     db_permission = Permission(
         name=permission_data.name,
@@ -50,19 +50,19 @@ def create_permission(db: Session, permission_data: PermissionCreate) -> Permiss
 
 def update_permission(db: Session, permission_id: int, permission_update: PermissionUpdate) -> Optional[Permission]:
     """
-    Update a permission
+    更新权限
     """
     db_permission = db.query(Permission).filter(Permission.id == permission_id).first()
     if not db_permission:
         return None
     
-    # Check if new name conflicts with existing permissions
+    # 检查新名称是否与现有权限冲突
     if permission_update.name and permission_update.name != db_permission.name:
         existing_permission = db.query(Permission).filter(Permission.name == permission_update.name).first()
         if existing_permission:
-            raise ValueError("Permission name already exists")
+            raise ValueError("权限名称已存在")
     
-    # Update fields
+    # 更新字段
     if permission_update.name is not None:
         db_permission.name = permission_update.name
     if permission_update.description is not None:
@@ -75,7 +75,7 @@ def update_permission(db: Session, permission_id: int, permission_update: Permis
 
 def delete_permission(db: Session, permission_id: int) -> bool:
     """
-    Delete a permission
+    删除权限
     """
     db_permission = db.query(Permission).filter(Permission.id == permission_id).first()
     if not db_permission:

@@ -1,4 +1,4 @@
-# Permission constants
+# 权限常量
 PERMISSIONS = {
     "USER_CREATE": "user:create",
     "USER_READ": "user:read",
@@ -14,7 +14,7 @@ PERMISSIONS = {
     "PERMISSION_DELETE": "permission:delete",
 }
 
-# Default roles
+# 默认角色
 DEFAULT_ROLES = {
     "ADMIN": "admin",
     "USER": "user",

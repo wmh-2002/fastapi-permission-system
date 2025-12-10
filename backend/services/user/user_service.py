@@ -1,51 +1,51 @@
 """
-Service layer for user-related operations
+用户相关操作的服务层
 """
 
 from sqlalchemy.orm import Session
-from app.database.models import User, Role
-from app.schemas.user import UserCreate, UserUpdate, UserInDB
-from app.utils.security import get_password_hash
+from backend.database.user_models import User, Role
+from backend.schemas.user import UserCreate, UserUpdate, UserInDB
+from backend.utils.security import get_password_hash
 from typing import List, Optional
 
 
 def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
     """
-    Retrieve a user by ID
+    根据ID获取用户
     """
     return db.query(User).filter(User.id == user_id).first()
 
 
 def get_user_by_username(db: Session, username: str) -> Optional[User]:
     """
-    Retrieve a user by username
+    根据用户名获取用户
     """
     return db.query(User).filter(User.username == username).first()
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
     """
-    Retrieve a list of users with pagination
+    分页获取用户列表
     """
     return db.query(User).offset(skip).limit(limit).all()
 
 
 def create_user(db: Session, user_data: UserCreate) -> User:
     """
-    Create a new user
+    创建新用户
     """
-    # Check if username already exists
+    # 检查用户名是否已存在
     existing_user = db.query(User).filter(User.username == user_data.username).first()
     if existing_user:
-        raise ValueError("Username already exists")
+        raise ValueError("用户名已存在")
     
-    # Check if email already exists
+    # 检查邮箱是否已存在
     if user_data.email:
         existing_email = db.query(User).filter(User.email == user_data.email).first()
         if existing_email:
-            raise ValueError("Email already exists")
+            raise ValueError("邮箱已存在")
     
-    # Create new user
+    # 创建新用户
     hashed_password = get_password_hash(user_data.password)
     db_user = User(
         username=user_data.username,
@@ -61,25 +61,25 @@ def create_user(db: Session, user_data: UserCreate) -> User:
 
 def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[User]:
     """
-    Update a user
+    更新用户
     """
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:
         return None
     
-    # Check if new username conflicts with existing users
+    # 检查新用户名是否与现有用户冲突
     if user_update.username and user_update.username != db_user.username:
         existing_user = db.query(User).filter(User.username == user_update.username).first()
         if existing_user:
-            raise ValueError("Username already exists")
+            raise ValueError("用户名已存在")
     
-    # Check if new email conflicts with existing users
+    # 检查新邮箱是否与现有用户冲突
     if user_update.email and user_update.email != db_user.email:
         existing_email = db.query(User).filter(User.email == user_update.email).first()
         if existing_email:
-            raise ValueError("Email already exists")
+            raise ValueError("邮箱已存在")
     
-    # Update fields
+    # 更新字段
     if user_update.username is not None:
         db_user.username = user_update.username
     if user_update.email is not None:
@@ -96,7 +96,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[
 
 def delete_user(db: Session, user_id: int) -> bool:
     """
-    Delete a user
+    删除用户
     """
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:
@@ -109,7 +109,7 @@ def delete_user(db: Session, user_id: int) -> bool:
 
 def assign_role_to_user(db: Session, user_id: int, role_id: int) -> bool:
     """
-    Assign a role to a user
+    为用户分配角色
     """
     user = db.query(User).filter(User.id == user_id).first()
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -126,7 +126,7 @@ def assign_role_to_user(db: Session, user_id: int, role_id: int) -> bool:
 
 def remove_role_from_user(db: Session, user_id: int, role_id: int) -> bool:
     """
-    Remove a role from a user
+    从用户移除角色
     """
     user = db.query(User).filter(User.id == user_id).first()
     role = db.query(Role).filter(Role.id == role_id).first()

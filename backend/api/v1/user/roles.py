@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.schemas.user import RoleCreate, RoleUpdate, RoleResponse
-from app.services.role_service import (
+from backend.database import get_db
+from backend.schemas.user import RoleCreate, RoleUpdate, RoleResponse
+from backend.services.role_service import (
     get_role_by_id, get_role_by_name, get_roles, create_role, 
     update_role, delete_role, add_permission_to_role, remove_permission_from_role
 )
-from app.utils.responses import success_response, error_response, create_json_response
-from app.api.deps import require_permission, get_current_user
-from app.database.models import User
-from app.constants.permissions import PERMISSIONS
+from backend.utils.responses import success_response, error_response, create_json_response
+from backend.api.deps import require_permission, get_current_user
+from backend.database.user_models import User
+from backend.constants.permissions import PERMISSIONS
 
 router = APIRouter()
 
@@ -22,10 +22,10 @@ async def list_roles(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get a list of roles with pagination
-    Requires: role:read permission
+    分页获取角色列表
+    需要: role:read 权限
     """
-    # Check if user has permission to read roles
+    # 检查用户是否有读取角色的权限
     require_permission(PERMISSIONS["ROLE_READ"])(current_user)
     
     db_roles = get_roles(db, skip=skip, limit=limit)
@@ -42,7 +42,7 @@ async def list_roles(
         )
         roles_response.append(role_response)
     
-    response = success_response(data={"roles": roles_response, "total": len(roles_response)}, message="Roles retrieved successfully")
+    response = success_response(data={"roles": roles_response, "total": len(roles_response)}, message="角色获取成功")
     return create_json_response(response)
 
 
@@ -53,15 +53,15 @@ async def get_role(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get a role by ID
-    Requires: role:read permission
+    根据ID获取角色
+    需要: role:read 权限
     """
-    # Check if user has permission to read roles
+    # 检查用户是否有读取角色的权限
     require_permission(PERMISSIONS["ROLE_READ"])(current_user)
     
     db_role = get_role_by_id(db, role_id)
     if not db_role:
-        response = error_response(error="Role not found", message="Role not found", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="角色未找到", message="角色未找到", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
     role_response = RoleResponse(
@@ -73,7 +73,7 @@ async def get_role(
         permissions=[perm.name for perm in db_role.permissions]
     )
     
-    response = success_response(data=role_response, message="Role retrieved successfully")
+    response = success_response(data=role_response, message="角色获取成功")
     return create_json_response(response)
 
 
@@ -84,10 +84,10 @@ async def create_new_role(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Create a new role
-    Requires: role:create permission
+    创建新角色
+    需要: role:create 权限
     """
-    # Check if user has permission to create roles
+    # 检查用户是否有创建角色的权限
     require_permission(PERMISSIONS["ROLE_CREATE"])(current_user)
     
     try:
@@ -100,10 +100,10 @@ async def create_new_role(
             updated_at=db_role.updated_at,
             permissions=[perm.name for perm in db_role.permissions]
         )
-        response = success_response(data=role_response, message="Role created successfully")
+        response = success_response(data=role_response, message="角色创建成功")
         return create_json_response(response)
     except ValueError as e:
-        response = error_response(error=str(e), message="Role creation failed", code=status.HTTP_400_BAD_REQUEST)
+        response = error_response(error=str(e), message="角色创建失败", code=status.HTTP_400_BAD_REQUEST)
         return create_json_response(response)
 
 
@@ -115,16 +115,16 @@ async def update_existing_role(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Update a role
-    Requires: role:update permission
+    更新角色
+    需要: role:update 权限
     """
-    # Check if user has permission to update roles
+    # 检查用户是否有更新角色的权限
     require_permission(PERMISSIONS["ROLE_UPDATE"])(current_user)
     
     try:
         db_role = update_role(db, role_id, role_update)
         if not db_role:
-            response = error_response(error="Role not found", message="Role not found", code=status.HTTP_404_NOT_FOUND)
+            response = error_response(error="角色未找到", message="角色未找到", code=status.HTTP_404_NOT_FOUND)
             return create_json_response(response)
         
         role_response = RoleResponse(
@@ -135,10 +135,10 @@ async def update_existing_role(
             updated_at=db_role.updated_at,
             permissions=[perm.name for perm in db_role.permissions]
         )
-        response = success_response(data=role_response, message="Role updated successfully")
+        response = success_response(data=role_response, message="角色更新成功")
         return create_json_response(response)
     except ValueError as e:
-        response = error_response(error=str(e), message="Role update failed", code=status.HTTP_400_BAD_REQUEST)
+        response = error_response(error=str(e), message="角色更新失败", code=status.HTTP_400_BAD_REQUEST)
         return create_json_response(response)
 
 
@@ -149,18 +149,18 @@ async def delete_existing_role(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Delete a role
-    Requires: role:delete permission
+    删除角色
+    需要: role:delete 权限
     """
-    # Check if user has permission to delete roles
+    # 检查用户是否有删除角色的权限
     require_permission(PERMISSIONS["ROLE_DELETE"])(current_user)
     
     success = delete_role(db, role_id)
     if not success:
-        response = error_response(error="Role not found", message="Role not found", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="角色未找到", message="角色未找到", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="Role deleted successfully")
+    response = success_response(message="角色删除成功")
     return create_json_response(response)
 
 
@@ -172,18 +172,18 @@ async def add_permission_to_role_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Add a permission to a role
-    Requires: role:update permission
+    为角色添加权限
+    需要: role:update 权限
     """
-    # Check if user has permission to update roles
+    # 检查用户是否有更新角色的权限
     require_permission(PERMISSIONS["ROLE_UPDATE"])(current_user)
     
     success = add_permission_to_role(db, role_id, permission_id)
     if not success:
-        response = error_response(error="Role or permission not found", message="Assignment failed", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="角色或权限未找到", message="分配失败", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="Permission added to role successfully")
+    response = success_response(message="权限成功添加到角色")
     return create_json_response(response)
 
 
@@ -195,16 +195,16 @@ async def remove_permission_from_role_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Remove a permission from a role
-    Requires: role:update permission
+    从角色移除权限
+    需要: role:update 权限
     """
-    # Check if user has permission to update roles
+    # 检查用户是否有更新角色的权限
     require_permission(PERMISSIONS["ROLE_UPDATE"])(current_user)
     
     success = remove_permission_from_role(db, role_id, permission_id)
     if not success:
-        response = error_response(error="Role or permission not found", message="Removal failed", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="角色或权限未找到", message="移除失败", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="Permission removed from role successfully")
+    response = success_response(message="权限已成功从角色移除")
     return create_json_response(response)

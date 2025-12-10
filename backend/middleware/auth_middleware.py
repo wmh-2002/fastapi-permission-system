@@ -1,8 +1,8 @@
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.database.models import User, Permission, PermissionLog
+from backend.database import get_db
+from backend.database.user_models import User, Permission, PermissionLog
 from typing import Generator
 import logging
 
@@ -13,15 +13,15 @@ class PermissionLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         response = await call_next(request)
         
-        # Log permission access if user is authenticated
+        # 如果用户已认证，则记录权限访问日志
         if "authorization" in request.headers:
             auth_header = request.headers["authorization"]
             if auth_header.startswith("Bearer "):
                 token = auth_header.split(" ")[1]
                 
-                # Extract user information from token (simplified for this example)
-                # In a real implementation, you'd decode the JWT and get the user ID
-                # For now, we'll skip the actual logging to keep it simple
+                # 从令牌中提取用户信息（此示例已简化）
+                # 在实际实现中，你会解码 JWT 并获取用户 ID
+                # 为简单起见，我们暂时跳过实际的日志记录
                 pass
         
         return response

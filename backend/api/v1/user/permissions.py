@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.schemas.user import PermissionCreate, PermissionUpdate, PermissionInDB
-from app.services.permission_service import (
+from backend.database import get_db
+from backend.schemas.user import PermissionCreate, PermissionUpdate, PermissionInDB
+from backend.services.permission_service import (
     get_permission_by_id, get_permission_by_name, get_permissions, 
     create_permission, update_permission, delete_permission
 )
-from app.utils.responses import success_response, error_response, create_json_response
-from app.api.deps import require_permission, get_current_user
-from app.database.models import User
-from app.constants.permissions import PERMISSIONS
+from backend.utils.responses import success_response, error_response, create_json_response
+from backend.api.deps import require_permission, get_current_user
+from backend.database.user_models import User
+from backend.constants.permissions import PERMISSIONS
 
 router = APIRouter()
 
@@ -22,10 +22,10 @@ async def list_permissions(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get a list of permissions with pagination
-    Requires: permission:read permission
+    分页获取权限列表
+    需要: permission:read 权限
     """
-    # Check if user has permission to read permissions
+    # 检查用户是否有读取权限的权限
     require_permission(PERMISSIONS["PERMISSION_READ"])(current_user)
     
     db_permissions = get_permissions(db, skip=skip, limit=limit)
@@ -41,7 +41,7 @@ async def list_permissions(
         )
         permissions_response.append(permission_response)
     
-    response = success_response(data={"permissions": permissions_response, "total": len(permissions_response)}, message="Permissions retrieved successfully")
+    response = success_response(data={"permissions": permissions_response, "total": len(permissions_response)}, message="权限获取成功")
     return create_json_response(response)
 
 
@@ -52,15 +52,15 @@ async def get_permission(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get a permission by ID
-    Requires: permission:read permission
+    根据ID获取权限
+    需要: permission:read 权限
     """
-    # Check if user has permission to read permissions
+    # 检查用户是否有读取权限的权限
     require_permission(PERMISSIONS["PERMISSION_READ"])(current_user)
     
     db_permission = get_permission_by_id(db, permission_id)
     if not db_permission:
-        response = error_response(error="Permission not found", message="Permission not found", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="权限未找到", message="权限未找到", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
     permission_response = PermissionInDB(
@@ -71,7 +71,7 @@ async def get_permission(
         updated_at=db_permission.updated_at
     )
     
-    response = success_response(data=permission_response, message="Permission retrieved successfully")
+    response = success_response(data=permission_response, message="权限获取成功")
     return create_json_response(response)
 
 
@@ -82,10 +82,10 @@ async def create_new_permission(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Create a new permission
-    Requires: permission:create permission
+    创建新权限
+    需要: permission:create 权限
     """
-    # Check if user has permission to create permissions
+    # 检查用户是否有创建权限的权限
     require_permission(PERMISSIONS["PERMISSION_CREATE"])(current_user)
     
     try:
@@ -97,10 +97,10 @@ async def create_new_permission(
             created_at=db_permission.created_at,
             updated_at=db_permission.updated_at
         )
-        response = success_response(data=permission_response, message="Permission created successfully")
+        response = success_response(data=permission_response, message="权限创建成功")
         return create_json_response(response)
     except ValueError as e:
-        response = error_response(error=str(e), message="Permission creation failed", code=status.HTTP_400_BAD_REQUEST)
+        response = error_response(error=str(e), message="权限创建失败", code=status.HTTP_400_BAD_REQUEST)
         return create_json_response(response)
 
 
@@ -112,16 +112,16 @@ async def update_existing_permission(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Update a permission
-    Requires: permission:update permission
+    更新权限
+    需要: permission:update 权限
     """
-    # Check if user has permission to update permissions
+    # 检查用户是否有更新权限的权限
     require_permission(PERMISSIONS["PERMISSION_UPDATE"])(current_user)
     
     try:
         db_permission = update_permission(db, permission_id, permission_update)
         if not db_permission:
-            response = error_response(error="Permission not found", message="Permission not found", code=status.HTTP_404_NOT_FOUND)
+            response = error_response(error="权限未找到", message="权限未找到", code=status.HTTP_404_NOT_FOUND)
             return create_json_response(response)
         
         permission_response = PermissionInDB(
@@ -131,10 +131,10 @@ async def update_existing_permission(
             created_at=db_permission.created_at,
             updated_at=db_permission.updated_at
         )
-        response = success_response(data=permission_response, message="Permission updated successfully")
+        response = success_response(data=permission_response, message="权限更新成功")
         return create_json_response(response)
     except ValueError as e:
-        response = error_response(error=str(e), message="Permission update failed", code=status.HTTP_400_BAD_REQUEST)
+        response = error_response(error=str(e), message="权限更新失败", code=status.HTTP_400_BAD_REQUEST)
         return create_json_response(response)
 
 
@@ -145,16 +145,16 @@ async def delete_existing_permission(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Delete a permission
-    Requires: permission:delete permission
+    删除权限
+    需要: permission:delete 权限
     """
-    # Check if user has permission to delete permissions
+    # 检查用户是否有删除权限的权限
     require_permission(PERMISSIONS["PERMISSION_DELETE"])(current_user)
     
     success = delete_permission(db, permission_id)
     if not success:
-        response = error_response(error="Permission not found", message="Permission not found", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="权限未找到", message="权限未找到", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="Permission deleted successfully")
+    response = success_response(message="权限删除成功")
     return create_json_response(response)

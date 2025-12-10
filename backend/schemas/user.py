@@ -3,7 +3,7 @@ from typing import List, Optional
 from datetime import datetime
 
 
-# User Schemas
+# 用户模式
 class UserBase(BaseModel):
     username: str
     email: Optional[EmailStr] = None
@@ -39,7 +39,7 @@ class UserResponse(UserInDB):
     roles: List[str] = []
 
 
-# Role Schemas
+# 角色模式
 class RoleBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -67,7 +67,7 @@ class RoleResponse(RoleInDB):
     permissions: List[str] = []
 
 
-# Permission Schemas
+# 权限模式
 class PermissionBase(BaseModel):
     name: str
     description: Optional[str] = None

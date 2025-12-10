@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.database import get_db
-from app.schemas.user import UserCreate, UserUpdate, UserResponse
-from app.services.user_service import (
+from backend.database import get_db
+from backend.schemas.user import UserCreate, UserUpdate, UserResponse
+from backend.services.user_service import (
     get_user_by_id, get_user_by_username, get_users, create_user, 
     update_user, delete_user, assign_role_to_user, remove_role_from_user
 )
-from app.utils.responses import success_response, error_response, create_json_response
-from app.api.deps import require_permission, require_role, get_current_user
-from app.database.models import User
-from app.constants.permissions import PERMISSIONS
+from backend.utils.responses import success_response, error_response, create_json_response
+from backend.api.deps import require_permission, require_role, get_current_user
+from backend.database.user_models import User
+from backend.constants.permissions import PERMISSIONS
 
 router = APIRouter()
 
@@ -22,10 +22,10 @@ async def list_users(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get a list of users with pagination
-    Requires: user:read permission
+    分页获取用户列表
+    需要: user:read 权限
     """
-    # Check if user has permission to read users
+    # 检查用户是否有读取用户的权限
     require_permission(PERMISSIONS["USER_READ"])(current_user)
     
     db_users = get_users(db, skip=skip, limit=limit)
@@ -43,7 +43,7 @@ async def list_users(
         )
         users_response.append(user_response)
     
-    response = success_response(data={"users": users_response, "total": len(users_response)}, message="Users retrieved successfully")
+    response = success_response(data={"users": users_response, "total": len(users_response)}, message="用户获取成功")
     return create_json_response(response)
 
 
@@ -54,15 +54,15 @@ async def get_user(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get a user by ID
-    Requires: user:read permission
+    根据ID获取用户
+    需要: user:read 权限
     """
-    # Check if user has permission to read users
+    # 检查用户是否有读取用户的权限
     require_permission(PERMISSIONS["USER_READ"])(current_user)
     
     db_user = get_user_by_id(db, user_id)
     if not db_user:
-        response = error_response(error="User not found", message="User not found", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="用户未找到", message="用户未找到", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
     user_response = UserResponse(
@@ -75,7 +75,7 @@ async def get_user(
         roles=[role.name for role in db_user.roles]
     )
     
-    response = success_response(data=user_response, message="User retrieved successfully")
+    response = success_response(data=user_response, message="用户获取成功")
     return create_json_response(response)
 
 
@@ -86,10 +86,10 @@ async def create_new_user(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Create a new user
-    Requires: user:create permission
+    创建新用户
+    需要: user:create 权限
     """
-    # Check if user has permission to create users
+    # 检查用户是否有创建用户的权限
     require_permission(PERMISSIONS["USER_CREATE"])(current_user)
     
     try:
@@ -103,10 +103,10 @@ async def create_new_user(
             status=db_user.status,
             roles=[role.name for role in db_user.roles]
         )
-        response = success_response(data=user_response, message="User created successfully")
+        response = success_response(data=user_response, message="用户创建成功")
         return create_json_response(response)
     except ValueError as e:
-        response = error_response(error=str(e), message="User creation failed", code=status.HTTP_400_BAD_REQUEST)
+        response = error_response(error=str(e), message="用户创建失败", code=status.HTTP_400_BAD_REQUEST)
         return create_json_response(response)
 
 
@@ -118,16 +118,16 @@ async def update_existing_user(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Update a user
-    Requires: user:update permission
+    更新用户
+    需要: user:update 权限
     """
-    # Check if user has permission to update users
+    # 检查用户是否有更新用户的权限
     require_permission(PERMISSIONS["USER_UPDATE"])(current_user)
     
     try:
         db_user = update_user(db, user_id, user_update)
         if not db_user:
-            response = error_response(error="User not found", message="User not found", code=status.HTTP_404_NOT_FOUND)
+            response = error_response(error="用户未找到", message="用户未找到", code=status.HTTP_404_NOT_FOUND)
             return create_json_response(response)
         
         user_response = UserResponse(
@@ -139,10 +139,10 @@ async def update_existing_user(
             status=db_user.status,
             roles=[role.name for role in db_user.roles]
         )
-        response = success_response(data=user_response, message="User updated successfully")
+        response = success_response(data=user_response, message="用户更新成功")
         return create_json_response(response)
     except ValueError as e:
-        response = error_response(error=str(e), message="User update failed", code=status.HTTP_400_BAD_REQUEST)
+        response = error_response(error=str(e), message="用户更新失败", code=status.HTTP_400_BAD_REQUEST)
         return create_json_response(response)
 
 
@@ -153,18 +153,18 @@ async def delete_existing_user(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Delete a user
-    Requires: user:delete permission
+    删除用户
+    需要: user:delete 权限
     """
-    # Check if user has permission to delete users
+    # 检查用户是否有删除用户的权限
     require_permission(PERMISSIONS["USER_DELETE"])(current_user)
     
     success = delete_user(db, user_id)
     if not success:
-        response = error_response(error="User not found", message="User not found", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="用户未找到", message="用户未找到", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="User deleted successfully")
+    response = success_response(message="用户删除成功")
     return create_json_response(response)
 
 
@@ -176,18 +176,18 @@ async def assign_role_to_user_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Assign a role to a user
-    Requires: user:update permission
+    为用户分配角色
+    需要: user:update 权限
     """
-    # Check if user has permission to update users
+    # 检查用户是否有更新用户的权限
     require_permission(PERMISSIONS["USER_UPDATE"])(current_user)
     
     success = assign_role_to_user(db, user_id, role_id)
     if not success:
-        response = error_response(error="User or role not found", message="Assignment failed", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="用户或角色未找到", message="分配失败", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="Role assigned successfully")
+    response = success_response(message="角色分配成功")
     return create_json_response(response)
 
 
@@ -199,16 +199,16 @@ async def remove_role_from_user_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Remove a role from a user
-    Requires: user:update permission
+    从用户移除角色
+    需要: user:update 权限
     """
-    # Check if user has permission to update users
+    # 检查用户是否有更新用户的权限
     require_permission(PERMISSIONS["USER_UPDATE"])(current_user)
     
     success = remove_role_from_user(db, user_id, role_id)
     if not success:
-        response = error_response(error="User or role not found", message="Removal failed", code=status.HTTP_404_NOT_FOUND)
+        response = error_response(error="用户或角色未找到", message="移除失败", code=status.HTTP_404_NOT_FOUND)
         return create_json_response(response)
     
-    response = success_response(message="Role removed successfully")
+    response = success_response(message="角色移除成功")
     return create_json_response(response)

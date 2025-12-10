@@ -1,42 +1,39 @@
 """
-Service layer for role-related operations
+角色相关操作的服务层
 """
 
 from sqlalchemy.orm import Session
-from app.database.models import Role, Permission
-from app.schemas.user import RoleCreate, RoleUpdate
+from backend.database.user_models import Role, Permission
+from backend.schemas.user import RoleCreate, RoleUpdate
 from typing import List, Optional
 
 
 def get_role_by_id(db: Session, role_id: int) -> Optional[Role]:
     """
-    Retrieve a role by ID
+    根据ID获取角色
     """
     return db.query(Role).filter(Role.id == role_id).first()
 
-
 def get_role_by_name(db: Session, name: str) -> Optional[Role]:
     """
-    Retrieve a role by name
+    根据名称获取角色
     """
     return db.query(Role).filter(Role.name == name).first()
 
-
 def get_roles(db: Session, skip: int = 0, limit: int = 100) -> List[Role]:
     """
-    Retrieve a list of roles with pagination
+    分页获取角色列表
     """
     return db.query(Role).offset(skip).limit(limit).all()
 
-
 def create_role(db: Session, role_data: RoleCreate) -> Role:
     """
-    Create a new role
+    创建新角色
     """
-    # Check if role name already exists
+    # 检查角色名称是否已存在
     existing_role = db.query(Role).filter(Role.name == role_data.name).first()
     if existing_role:
-        raise ValueError("Role name already exists")
+        raise ValueError("角色名称已存在")
     
     db_role = Role(
         name=role_data.name,
@@ -47,22 +44,21 @@ def create_role(db: Session, role_data: RoleCreate) -> Role:
     db.refresh(db_role)
     return db_role
 
-
 def update_role(db: Session, role_id: int, role_update: RoleUpdate) -> Optional[Role]:
     """
-    Update a role
+    更新角色
     """
     db_role = db.query(Role).filter(Role.id == role_id).first()
     if not db_role:
         return None
     
-    # Check if new name conflicts with existing roles
+    # 检查新名称是否与现有角色冲突
     if role_update.name and role_update.name != db_role.name:
         existing_role = db.query(Role).filter(Role.name == role_update.name).first()
         if existing_role:
-            raise ValueError("Role name already exists")
+            raise ValueError("角色名称已存在")
     
-    # Update fields
+    # 更新字段
     if role_update.name is not None:
         db_role.name = role_update.name
     if role_update.description is not None:
@@ -72,10 +68,9 @@ def update_role(db: Session, role_id: int, role_update: RoleUpdate) -> Optional[
     db.refresh(db_role)
     return db_role
 
-
 def delete_role(db: Session, role_id: int) -> bool:
     """
-    Delete a role
+    删除角色
     """
     db_role = db.query(Role).filter(Role.id == role_id).first()
     if not db_role:
@@ -85,10 +80,9 @@ def delete_role(db: Session, role_id: int) -> bool:
     db.commit()
     return True
 
-
 def add_permission_to_role(db: Session, role_id: int, permission_id: int) -> bool:
     """
-    Add a permission to a role
+    为角色添加权限
     """
     role = db.query(Role).filter(Role.id == role_id).first()
     permission = db.query(Permission).filter(Permission.id == permission_id).first()
@@ -102,10 +96,9 @@ def add_permission_to_role(db: Session, role_id: int, permission_id: int) -> boo
     
     return True
 
-
 def remove_permission_from_role(db: Session, role_id: int, permission_id: int) -> bool:
     """
-    Remove a permission from a role
+    从角色移除权限
     """
     role = db.query(Role).filter(Role.id == role_id).first()
     permission = db.query(Permission).filter(Permission.id == permission_id).first()

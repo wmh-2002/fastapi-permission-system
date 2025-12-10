@@ -1,20 +1,20 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from app.config import settings
+from backend.config import settings
 
-# Create database engine
+# 创建数据库引擎
 engine = create_engine(settings.DATABASE_URL)
 
-# Create session factory
+# 创建会话工厂
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base class for models
+# 模型的基类
 Base = declarative_base()
 
 def get_db():
     """
-    Dependency function to get database session
+    获取数据库会话的依赖函数
     """
     db = SessionLocal()
     try:
